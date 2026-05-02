@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winery Bingo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #1a0510;
+      background-image: radial-gradient(ellipse at top, #3d1228 0%, #1a0510 70%);
+      color: #f0e0c8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      color: #c8913a;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+    }
+    .page-header h1 span { color: #e8b86d; }
+    .page-header p {
+      margin-top: 0.4rem;
+      font-style: italic;
+      color: #a07850;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+    .divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #c8913a, transparent);
+      margin: 0.75rem auto 0;
+    }
+
+    /* ── Board wrapper ── */
+    .board-wrapper {
+      width: 100%;
+      max-width: 580px;
+    }
+
+    /* ── BINGO header row ── */
+    .bingo-letters {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .bingo-letter {
+      background: linear-gradient(135deg, #c8913a, #e8b86d);
+      color: #1a0510;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+      text-align: center;
+      padding: 0.5rem 0;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    /* ── Grid ── */
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .cell {
+      background: #f5e8d4;
+      color: #2a0e18;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6px 5px;
+      font-size: clamp(0.6rem, 1.6vw, 0.78rem);
+      font-weight: 400;
+      line-height: 1.35;
+      cursor: pointer;
+      aspect-ratio: 1;
+      transition: background 0.18s, color 0.18s, transform 0.1s, box-shadow 0.18s;
+      border: 2px solid #d4bfa0;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .cell:hover:not(.free) {
+      background: #ecdfc8;
+      border-color: #c8913a;
+      transform: scale(1.03);
+      z-index: 1;
+    }
+    .cell:active:not(.free) { transform: scale(0.97); }
+
+    .cell.marked {
+      background: #6b1830;
+      color: #f0e0c8;
+      border-color: #c8913a;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .cell.marked::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(200,145,58,0.15), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cell.bingo-line {
+      background: #8b1a35;
+      color: #e8b86d;
+      border-color: #e8b86d;
+      box-shadow: 0 0 10px rgba(232,184,109,0.35), inset 0 0 12px rgba(0,0,0,0.3);
+    }
+
+    .cell.free {
+      background: linear-gradient(135deg, #8b1a35, #6b1830);
+      color: #e8b86d;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(0.75rem, 2vw, 0.9rem);
+      font-style: italic;
+      font-weight: 700;
+      border-color: #c8913a;
+      cursor: default;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.35);
+    }
+    .cell.free:hover { transform: none; background: linear-gradient(135deg, #8b1a35, #6b1830); }
+
+    /* ── Buttons ── */
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .btn {
+      padding: 0.65rem 1.75rem;
+      background: transparent;
+      border: 2px solid #c8913a;
+      color: #c8913a;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .btn:hover {
+      background: #c8913a;
+      color: #1a0510;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 2, 8, 0.88);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      backdrop-filter: blur(3px);
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: #250813;
+      border: 2px solid #c8913a;
+      border-radius: 12px;
+      padding: 2rem 1.75rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(200,145,58,0.25), 0 20px 60px rgba(0,0,0,0.7);
+      animation: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes pop-in {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 8vw, 3rem);
+      color: #e8b86d;
+      letter-spacing: 0.08em;
+    }
+    .modal-sub {
+      margin-top: 0.5rem;
+      color: #a07850;
+      font-style: italic;
+      font-size: 1.05rem;
+    }
+    .gif-wrap {
+      margin: 1.25rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a0510;
+    }
+    .gif-wrap img {
+      max-width: 100%;
+      max-height: 320px;
+      display: block;
+      border-radius: 6px;
+    }
+    .gif-fallback {
+      font-size: 2.5rem;
+      padding: 1.5rem 1rem;
+      line-height: 1.4;
+    }
+    .gif-fallback p { font-size: 1rem; font-style: italic; color: #a07850; margin-top: 0.5rem; }
+
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: center; margin-top: 1.25rem; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 2.5rem;
+      color: #5a3a28;
+      font-size: 0.78rem;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>Winery <span>Bingo</span></h1>
+    <p>Mark each square as your sommelier utters the sacred words</p>
+    <div class="divider"></div>
+  </header>
+
+  <div class="board-wrapper">
+    <div class="bingo-letters">
+      <div class="bingo-letter">B</div>
+      <div class="bingo-letter">I</div>
+      <div class="bingo-letter">N</div>
+      <div class="bingo-letter">G</div>
+      <div class="bingo-letter">O</div>
+    </div>
+    <div class="bingo-grid" id="board"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="resetBtn">New Board</button>
+  </div>
+
+  <!-- Bingo modal -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">BINGO!</div>
+      <p class="modal-sub">Cheers — you called it before the second pour.</p>
+      <div class="gif-wrap" id="gifWrap"></div>
+      <div class="modal-actions">
+        <button class="btn" id="closeModal">Keep Playing</button>
+        <button class="btn" id="modalReset">New Board</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Pour yourself a glass and play again anytime &mdash; your board is saved between visits.</footer>
+
+  <script>
+    const PHRASES = [
+      "The grapes had to struggle",
+      "Tannins",
+      "The Judgment of Paris",
+      "Terroir",
+      "Let it breathe",
+      "Notes of oak",
+      "Full-bodied",
+      "The nose",
+      "Long, lingering finish",
+      "Pairs well with cheese",
+      "Aged in French oak",
+      "Beautiful legs",
+      "Dark fruit forward",
+      "Old World vs New World",
+      "A very good vintage",
+      "Complex bouquet",
+      "Bright acidity",
+      "Biodynamic farming",
+      "Hand-harvested",
+      "Unique micro-climate",
+      "Malolactic fermentation",
+      "You can taste the sunshine",
+      "Have you considered our wine club?",
+      "Mineral finish",
+      "Estate grown",
+      "Single vineyard",
+      "Our reserve selection",
+      "Very approachable",
+      "Crush season",
+      "The soil tells a story",
+      "Spit bucket is right here",
+      "Decant for at least an hour",
+      "Austere when young",
+      "Needs to open up",
+      "Notes of pencil shavings",
+      "Volatile acidity",
+      "Riddled by hand",
+      "Sur lie aging",
+      "Cave temperature",
+      "This one needs a few more years",
+      "You can smell the forest floor",
+    ];
+
+    // The Office wine / drinking GIFs (Giphy IDs)
+    // Multiple options with fallbacks in case any don't load
+    const GIF_IDS = [
+      "3o7TKzD5RVQLS1RdTG",
+      "l0HlBO7eyXzSZkJri",
+      "xT0BKnIfnlZa1pOiCc",
+      "fLMsXnWCer5JMJRX2M",
+    ];
+
+    // ── Cookie helpers ──────────────────────────────────────────────────────
+    function setCookie(name, value, days) {
+      const exp = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Lax`;
+    }
+    function getCookie(name) {
+      const match = document.cookie.split('; ').find(c => c.startsWith(name + '='));
+      return match ? decodeURIComponent(match.split('=')[1]) : null;
+    }
+    function clearCookies() {
+      ['wbingo_board', 'wbingo_marked'].forEach(n => {
+        document.cookie = `${n}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+      });
+    }
+
+    // ── Fisher-Yates shuffle ────────────────────────────────────────────────
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // ── State ───────────────────────────────────────────────────────────────
+    // board: array of 25 strings; index 12 is always "FREE"
+    // marked: array of 25 booleans
+    let board = [];
+    let marked = [];
+    let bingoShown = false;
+
+    const WIN_LINES = [
+      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24], // rows
+      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24], // cols
+      [0,6,12,18,24], [4,8,12,16,20],                                                   // diagonals
+    ];
+
+    function checkBingo() {
+      for (const line of WIN_LINES) {
+        if (line.every(i => marked[i])) return line;
+      }
+      return null;
+    }
+
+    // ── Save / Load ─────────────────────────────────────────────────────────
+    function saveState() {
+      setCookie('wbingo_board', JSON.stringify(board), 30);
+      setCookie('wbingo_marked', JSON.stringify(marked), 30);
+    }
+
+    function loadState() {
+      try {
+        const b = getCookie('wbingo_board');
+        const m = getCookie('wbingo_marked');
+        if (b && m) {
+          const pb = JSON.parse(b);
+          const pm = JSON.parse(m);
+          if (Array.isArray(pb) && pb.length === 25 && Array.isArray(pm) && pm.length === 25) {
+            board = pb;
+            marked = pm;
+            return true;
+          }
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    function initBoard() {
+      const picked = shuffle(PHRASES).slice(0, 24);
+      board = [...picked.slice(0, 12), 'FREE', ...picked.slice(12)];
+      marked = new Array(25).fill(false);
+      marked[12] = true; // FREE square always marked
+      bingoShown = false;
+      saveState();
+      renderBoard();
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderBoard() {
+      const grid = document.getElementById('board');
+      grid.innerHTML = '';
+
+      const winLine = checkBingo();
+      const winSet = new Set(winLine || []);
+
+      board.forEach((phrase, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        if (phrase === 'FREE') {
+          cell.classList.add('free', 'marked');
+          cell.textContent = 'FREE';
+        } else {
+          cell.textContent = phrase;
+          if (marked[i]) cell.classList.add('marked');
+          if (winSet.has(i)) cell.classList.add('bingo-line');
+          cell.addEventListener('click', () => toggleCell(i));
+        }
+
+        grid.appendChild(cell);
+      });
+    }
+
+    // ── Toggle ────────────────────────────────────────────────────────────────
+    function toggleCell(idx) {
+      if (board[idx] === 'FREE') return;
+      marked[idx] = !marked[idx];
+      saveState();
+      renderBoard();
+      if (!bingoShown && checkBingo()) {
+        bingoShown = true;
+        showModal();
+      }
+    }
+
+    // ── Modal ─────────────────────────────────────────────────────────────────
+    function showModal() {
+      const gifWrap = document.getElementById('gifWrap');
+      gifWrap.innerHTML = '';
+
+      const id = GIF_IDS[Math.floor(Math.random() * GIF_IDS.length)];
+      const img = document.createElement('img');
+      img.alt = 'The Office wine celebration';
+      img.src = `https://media.giphy.com/media/${id}/giphy.gif`;
+
+      let fallbackShown = false;
+      img.onerror = () => {
+        if (fallbackShown) return;
+        fallbackShown = true;
+        gifWrap.innerHTML = `
+          <div class="gif-fallback">
+            🍷🥂🍾
+            <p>"I'm not superstitious, but I am a little stitious about this vintage."</p>
+          </div>`;
+      };
+
+      gifWrap.appendChild(img);
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+
+    // ── Event listeners ───────────────────────────────────────────────────────
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      clearCookies();
+      initBoard();
+    });
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('modalReset').addEventListener('click', () => {
+      closeModal();
+      clearCookies();
+      initBoard();
+    });
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    if (loadState()) {
+      if (checkBingo()) bingoShown = true; // don't re-trigger on page reload
+      renderBoard();
+    } else {
+      initBoard();
+    }
+  </script>
+</body>
+</html>
