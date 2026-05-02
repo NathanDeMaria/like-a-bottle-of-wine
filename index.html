@@ -341,6 +341,7 @@
       "Organic farming practices",
       "Debate over where the apostrophe goes in Stag's Leap",
       "Rees eats a grape",
+      "Only 75% has to be that grape to put it on the label",
     ];
 
     // Confirmed The Office wine/drinking GIFs from Giphy (verified IDs from search)
@@ -378,7 +379,7 @@
     }
 
     // ── State ───────────────────────────────────────────────────────────────
-    // board: array of 25 strings; index 12 is always "FREE"
+    // board: array of 25 strings; index 12 is always "Guide misspeaks" (pre-marked center)
     // marked: array of 25 booleans
     let board = [];
     let marked = [];
@@ -423,9 +424,9 @@
     // ── Init ─────────────────────────────────────────────────────────────────
     function initBoard() {
       const picked = shuffle(PHRASES).slice(0, 24);
-      board = [...picked.slice(0, 12), 'FREE', ...picked.slice(12)];
+      board = [...picked.slice(0, 12), 'Guide misspeaks', ...picked.slice(12)];
       marked = new Array(25).fill(false);
-      marked[12] = true; // FREE square always marked
+      marked[12] = true; // center square always pre-marked
       bingoShown = false;
       saveState();
       renderBoard();
@@ -443,9 +444,9 @@
         const cell = document.createElement('div');
         cell.className = 'cell';
 
-        if (phrase === 'FREE') {
+        if (phrase === 'Guide misspeaks') {
           cell.classList.add('free', 'marked');
-          cell.textContent = 'FREE';
+          cell.textContent = 'Guide misspeaks';
         } else {
           cell.textContent = phrase;
           if (marked[i]) cell.classList.add('marked');
@@ -459,7 +460,7 @@
 
     // ── Toggle ────────────────────────────────────────────────────────────────
     function toggleCell(idx) {
-      if (board[idx] === 'FREE') return;
+      if (board[idx] === 'Guide misspeaks') return;
       marked[idx] = !marked[idx];
       saveState();
       renderBoard();
