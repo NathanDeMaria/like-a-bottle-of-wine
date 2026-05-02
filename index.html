@@ -211,22 +211,19 @@
       margin: 1.25rem 0;
       border-radius: 8px;
       overflow: hidden;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: #1a0510;
     }
-    .gif-wrap img {
-      max-width: 100%;
-      max-height: 320px;
+    .gif-wrap iframe {
       display: block;
-      border-radius: 6px;
+      width: 100%;
+      aspect-ratio: 480 / 270;
+      border: none;
     }
     .gif-fallback {
       font-size: 2.5rem;
       padding: 1.5rem 1rem;
       line-height: 1.4;
+      text-align: center;
     }
     .gif-fallback p { font-size: 1rem; font-style: italic; color: #a07850; margin-top: 0.5rem; }
 
@@ -323,15 +320,32 @@
       "Cave temperature",
       "This one needs a few more years",
       "You can smell the forest floor",
+      // oak comparisons
+      "French oak is more subtle, American is bolder",
+      "That vanilla note? American oak.",
+      "French oak brings the spice, American brings the coconut",
+      "We use a mix of French and American oak",
+      "Tighter grain on the French oak barrels",
+      // sparkling / bubbles
+      "Domaine Carneros does the bubbles",
+      "Traditional method — secondary fermentation in the bottle",
+      "The dosage controls the sweetness",
+      "Méthode champenoise",
+      "These bubbles are smaller and more persistent",
+      // bonus
+      "Drink now or cellar for 10 years",
+      "The winemaker didn't want to interfere",
+      "Indigenous yeasts only",
+      "It's a food wine",
     ];
 
-    // The Office wine / drinking GIFs (Giphy IDs)
-    // Multiple options with fallbacks in case any don't load
+    // Confirmed The Office wine/drinking GIFs from Giphy (verified IDs from search)
+    // "oaky afterbirth" wine tasting, S2 drinking, S3 Benihana Christmas, Michael sprays champagne
     const GIF_IDS = [
-      "3o7TKzD5RVQLS1RdTG",
-      "l0HlBO7eyXzSZkJri",
-      "xT0BKnIfnlZa1pOiCc",
-      "fLMsXnWCer5JMJRX2M",
+      "77f1tUfPqAAcciebFk",
+      "sOnZCrhLaQZnisWCWK",
+      "3Y6Fz12G0M6QTi1KWF",
+      "G96zgIcQn1L2xpmdxi",
     ];
 
     // ── Cookie helpers ──────────────────────────────────────────────────────
@@ -454,25 +468,15 @@
     // ── Modal ─────────────────────────────────────────────────────────────────
     function showModal() {
       const gifWrap = document.getElementById('gifWrap');
-      gifWrap.innerHTML = '';
-
       const id = GIF_IDS[Math.floor(Math.random() * GIF_IDS.length)];
-      const img = document.createElement('img');
-      img.alt = 'The Office wine celebration';
-      img.src = `https://media.giphy.com/media/${id}/giphy.gif`;
 
-      let fallbackShown = false;
-      img.onerror = () => {
-        if (fallbackShown) return;
-        fallbackShown = true;
-        gifWrap.innerHTML = `
-          <div class="gif-fallback">
-            🍷🥂🍾
-            <p>"I'm not superstitious, but I am a little stitious about this vintage."</p>
-          </div>`;
-      };
+      // Use Giphy's official iframe embed — avoids hotlink blocking on direct media URLs
+      gifWrap.innerHTML = `<iframe
+        src="https://giphy.com/embed/${id}"
+        title="The Office wine celebration"
+        allowFullScreen
+      ></iframe>`;
 
-      gifWrap.appendChild(img);
       document.getElementById('modal').classList.add('active');
     }
 
