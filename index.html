@@ -200,6 +200,32 @@
       background: #c8913a;
       color: #1a0510;
     }
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .btn:disabled:hover {
+      background: transparent;
+      color: #c8913a;
+    }
+
+    .name-modal-select {
+      display: block;
+      width: 100%;
+      background: #1a0510;
+      color: #f0e0c8;
+      border: 1px solid #c8913a;
+      border-radius: 4px;
+      padding: 0.65rem 0.75rem;
+      font-family: 'Lato', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 1.5rem 0 1.25rem;
+    }
+    .name-modal-select:focus {
+      outline: 2px solid #c8913a;
+      outline-offset: 1px;
+    }
 
     /* ── Modal ── */
     .modal-overlay {
@@ -281,6 +307,26 @@
     <p>Mark each square as your sommelier utters the sacred words</p>
     <div class="divider"></div>
   </header>
+
+  <!-- Name gate modal — shown on first visit, not dismissable -->
+  <div class="modal-overlay" id="nameModal">
+    <div class="modal">
+      <div class="modal-title" style="font-size: clamp(1.5rem, 5vw, 2rem);">Sign the guestbook</div>
+      <p class="modal-sub">Pick your name — we'll keep the cards about you off your board.</p>
+      <select class="name-modal-select" id="nameModalPicker">
+        <option value="">— who are you? —</option>
+        <option value="Allegra">Allegra</option>
+        <option value="Arianna">Arianna</option>
+        <option value="Brooke">Brooke</option>
+        <option value="Michael">Michael</option>
+        <option value="Rees">Rees</option>
+        <option value="Ryan">Ryan</option>
+        <option value="Scott">Scott</option>
+        <option value="Tyler">Tyler</option>
+      </select>
+      <button class="btn" id="nameModalConfirm" disabled>Let's play</button>
+    </div>
+  </div>
 
   <div class="name-picker">
     <label for="namePicker">Who are you?</label>
@@ -588,15 +634,33 @@
       initBoard();
     });
 
+    // ── Name gate modal ───────────────────────────────────────────────────────
+    document.getElementById('nameModalPicker').addEventListener('change', e => {
+      document.getElementById('nameModalConfirm').disabled = !e.target.value;
+    });
+    document.getElementById('nameModalConfirm').addEventListener('click', () => {
+      const name = document.getElementById('nameModalPicker').value;
+      if (!name) return;
+      currentName = name;
+      setCookie('wbingo_name', currentName, 365);
+      document.getElementById('namePicker').value = currentName;
+      document.getElementById('nameModal').classList.remove('active');
+      initBoard();
+    });
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     currentName = getCookie('wbingo_name') || '';
-    document.getElementById('namePicker').value = currentName;
 
-    if (loadState()) {
-      if (checkBingo()) bingoShown = true; // don't re-trigger on page reload
-      renderBoard();
+    if (!currentName) {
+      document.getElementById('nameModal').classList.add('active');
     } else {
-      initBoard();
+      document.getElementById('namePicker').value = currentName;
+      if (loadState()) {
+        if (checkBingo()) bingoShown = true; // don't re-trigger on page reload
+        renderBoard();
+      } else {
+        initBoard();
+      }
     }
   </script>
 </body>
